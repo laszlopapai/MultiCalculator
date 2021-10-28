@@ -1,0 +1,36 @@
+mat-row.example-detail-row {
+    min-height: 0;
+}
+
+mat-row.example-element-row:not(.example-expanded-row):hover {
+  cursor: pointer;
+}
+
+mat-row.example-element-row {
+    border-bottom-width: 0;
+}
+
+.element-detail {
+    overflow: hidden;
+    display: flex;
+}
+
+.mat-header-cell, .mat-cell {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.summary-details-name {
+  width:200px;
+  float: left;
+  text-align: left;
+}
+
+.summary-detail-list > .mat-list-item {
+  height: 32px !important;
+  border-bottom: 1px solid;
+}
+
+.summary-detail-list > .mat-list-item:last-child {
+  border-bottom: 0px solid;
+}

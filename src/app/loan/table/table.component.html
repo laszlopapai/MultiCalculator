@@ -1,0 +1,111 @@
+<mat-table [dataSource]="dataSource" multiTemplateDataRows fxFill>
+                    
+    <ng-container matColumnDef="no">
+        <mat-header-cell *matHeaderCellDef> No. </mat-header-cell>
+        <mat-cell *matCellDef="let element; let i = dataIndex">
+            {{ element.index }}
+        </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+        <mat-cell *matCellDef="let element; let i = dataIndex">
+            <mat-icon *ngIf="element.prePayment > 0" matTooltip="Pre-payment done">price_check</mat-icon>
+            <mat-icon *ngIf="element.divergent" style="color: red;" matTooltip="Capital is diverging">trending_up</mat-icon>
+            <mat-icon *ngIf="element.remainingCapital == 0" matTooltip="Loan payed back">celebration</mat-icon>
+
+            <mat-icon *ngIf="element.index < annuitySrv.getCurrentMonthIndex()" matTooltip="Finished transaction">done</mat-icon>
+            <mat-icon *ngIf="element.index == annuitySrv.getCurrentMonthIndex()" matTooltip="Current transaction">loop</mat-icon>
+            <mat-icon *ngIf="element.index > annuitySrv.getCurrentMonthIndex()" matTooltip="Upcoming transaction">update</mat-icon>
+        </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="month">
+        <mat-header-cell *matHeaderCellDef> Month </mat-header-cell>
+        <mat-cell *matCellDef="let element; let i = dataIndex"> {{ annuitySrv.getDateFromMonthIndex(element.index) | date:env.dateFormat }} </mat-cell>
+    </ng-container>
+    
+    <ng-container matColumnDef="beginCapital">
+        <mat-header-cell *matHeaderCellDef> Begin capital </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{ (element.payedCapital != 0 ? element.remainingCapital + element.payedCapital + element.prePayment : 0)  | currency:loan.currency:'symbol':env.numberPrecision }} </mat-cell>
+    </ng-container>
+    
+    <ng-container matColumnDef="instalment">
+        <mat-header-cell *matHeaderCellDef> Instalment </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{ element.payedInstalment | currency:loan.currency:'symbol':env.numberPrecision }} </mat-cell>
+    </ng-container>
+    
+    <ng-container matColumnDef="payedCapital">
+        <mat-header-cell *matHeaderCellDef> Capital instalment </mat-header-cell>
+        <mat-cell *matCellDef="let element">
+            {{ element.payedCapital  | currency:loan.currency:'symbol':env.numberPrecision }}
+            <ng-container *ngIf="element.prePayment!=0"><br>&plus; {{ element.prePayment  | currency:loan.currency:'symbol':env.numberPrecision }}</ng-container>
+        </mat-cell>
+    </ng-container>
+    
+    <ng-container matColumnDef="payedInterest">
+        <mat-header-cell *matHeaderCellDef> Interest instalment </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{ element.payedInterest  | currency:loan.currency:'symbol':env.numberPrecision }} </mat-cell>
+    </ng-container>
+    
+    <ng-container matColumnDef="cumlatedPayedSum">
+        <mat-header-cell *matHeaderCellDef> Total payed </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{ element.cumlatedPayedSum  | currency:loan.currency:'symbol':env.numberPrecision }} </mat-cell>
+    </ng-container>
+    
+    <ng-container matColumnDef="endCapital">
+        <mat-header-cell *matHeaderCellDef> End capital </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{ element.remainingCapital | currency:loan.currency:'symbol':env.numberPrecision }} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="expandedDetail">
+        <mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+            <div fxFill fxLayout="column" class="element-detail" 
+                [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+                <mat-selection-list class="summary-detail-list">
+                    <mat-list-item>
+                        <div class="summary-details-name">Interest rate in this month</div>
+                        <div style="float: left;">{{ element.interestRate }}%</div>
+                    </mat-list-item>
+                    <mat-list-item>
+                        <div class="summary-details-name">Payed fee in this month</div>
+                        <div style="float: left;">{{ element.payedFee | currency:loan.currency:'symbol':env.numberPrecision }}</div>
+                    </mat-list-item>
+                    <mat-list-item>
+                        <div class="summary-details-name">Pre-payment in this month</div>
+                        <div style="float: left;">{{ element.prePayment | currency:loan.currency:'symbol':env.numberPrecision }}</div>
+                    </mat-list-item>
+                    <mat-list-item>
+                        <div class="summary-details-name">Total payed capital so far</div>
+                        <div style="float: left;">{{ element.cumlatedPayedCapital | currency:loan.currency:'symbol':env.numberPrecision }}</div>
+                    </mat-list-item>
+                    <mat-list-item>
+                        <div class="summary-details-name">Total payed interest so far</div>
+                        <div style="float: left;">{{ element.cumlatedPayedInterest | currency:loan.currency:'symbol':env.numberPrecision }}</div>
+                    </mat-list-item>
+                    <mat-list-item>
+                        <div class="summary-details-name">Total payed fee so far</div>
+                        <div style="float: left;">{{ element.cumlatedPayedFee | currency:loan.currency:'symbol':env.numberPrecision }}</div>
+                    </mat-list-item>
+                    <mat-list-item>
+                        <div class="summary-details-name">Total pre-payment so far</div>
+                        <div style="float: left;">{{ element.cumlatedPrePayment | currency:loan.currency:'symbol':env.numberPrecision }}</div>
+                    </mat-list-item>
+                </mat-selection-list>
+
+
+                <div fxFill *ngIf="false">
+                    <pre>{{ element | json }}</pre>
+                </div>
+            </div>
+        </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+    <mat-row matRipple *matRowDef="let element; columns: displayedColumns;"
+        class="example-element-row"
+        [class.example-expanded-row]="expandedElement === element"
+        (click)="expandedElement = expandedElement === element ? null : element;"></mat-row>
+    <mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></mat-row>
+</mat-table>
+<mat-paginator [pageSize]="30" [pageSizeOptions]="[10, 30, 50, 100]" aria-label="Select page of users"></mat-paginator>

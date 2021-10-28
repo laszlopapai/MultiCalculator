@@ -1,0 +1,265 @@
+<div fxLayout="column" fxLayoutAlign="space-around" fxLayoutGap="10px">
+    <div fxLayout="row" fxLayoutAlign="space-around" fxLayoutGap="10px">
+        <mat-card fxFlex="50">
+            <mat-card-title>Loan properties</mat-card-title>
+            <mat-card-content>
+                <div fxLayout="column" fxLayoutAlign="space-around">
+                    <div fxLayout="row" fxFill>
+                        <mat-form-field appearance="fill" fxFlex="33">
+                            <mat-label>Currency</mat-label>
+                            <input matInput type="text" placeholder="Currency" [(ngModel)]="loan.currency">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill" fxFlex="33">
+                            <mat-label>Loan amount</mat-label>
+                            <input matInput type="tel" placeholder="Amount" [(ngModel)]="loan.loanAmount" mask="separator.2" thousandSeparator="," [prefix]="loan.currency | currencySymbol">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill" fxFlex="33">
+                            <mat-label>Interest rate</mat-label>
+                            <input matInput type="tel" placeholder="Percentage" [(ngModel)]="loan.interestRate" mask="separator.2" suffix="%">
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row" fxFill>
+                        <mat-form-field appearance="fill" fxFlex="50">
+                            <mat-label>Loan term in months</mat-label>
+                            <input matInput type="tel" placeholder="Months" [(ngModel)]="loan.loanTerm" mask="000">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill" fxFlex="50">
+                            <mat-label>First instalment date</mat-label>
+                            <input matInput [matDatepicker]="picker" [(ngModel)]="loan.beginDate">
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker startView="multi-year"
+                            (yearSelected)="chosenYearHandler($event)"
+                            (monthSelected)="chosenMonthHandler($event, picker)"></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row" fxFill>
+                        <mat-form-field appearance="fill" fxFlex="33">
+                            <mat-label>Instalment</mat-label>
+                            <input matInput type="tel" placeholder="Amount" [(ngModel)]="loan.instalment" mask="separator.2" thousandSeparator="," [prefix]="loan.currency | currencySymbol">
+                            <button mat-icon-button matSuffix (click)="annuitySrv.calculateLoanInstalment()"><mat-icon>calculate</mat-icon></button>
+                            <mat-hint>
+                                Click the calculator button to calculate the instalment based on the loan amount, the interest rate, and the term of the contract.
+                            </mat-hint>
+                        </mat-form-field>
+                        <mat-form-field appearance="fill" fxFlex="33">
+                            <mat-label>Begin cost</mat-label>
+                            <input matInput type="tel" placeholder="Amount" [(ngModel)]="loan.beginCost" mask="separator.2" thousandSeparator="," [prefix]="loan.currency | currencySymbol">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill" fxFlex="33">
+                            <mat-label>Monthly cost</mat-label>
+                            <input matInput type="tel" placeholder="Amount" [(ngModel)]="loan.monthlyCost" mask="separator.2" thousandSeparator="," [prefix]="loan.currency | currencySymbol">
+                        </mat-form-field>
+                    </div>
+                </div>
+            </mat-card-content>
+            <mat-card-actions>
+                <button style="float: right;" mat-raised-button color="primary" (click)="annuitySrv.calculate()">
+                    Calculate
+                </button>
+            </mat-card-actions>
+        </mat-card>
+
+
+        <mat-card fxFlex="50">
+            <mat-card-title>Memory</mat-card-title>
+            <mat-card-content>
+                <mat-selection-list [multiple]="false" style="height: 205px;overflow: auto;scrollbar-width: thin;">
+                    <mat-list-option [selected]="isFirst" *ngFor="let memoryItem of dataSrv.loanMemory; first as isFirst" 
+                        (click)="dataSrv.loadJSON(memoryItem.json);">
+                        <div fxFill fxLayout="row">
+                            <div fxFlex="80">{{ memoryItem.name }}</div>
+                            <div fxFlex="20">{{ memoryItem.date | date:'yyyy.MMM.dd. hh:mm' }}</div>
+                        </div>
+                    </mat-list-option>
+                    <mat-list-option [selected]="true" *ngIf="dataSrv.loanMemory.length == 0">
+                        <div fxFill fxLayout="row">
+                            <div fxFlex="80" style="color:yellow;">There isn't any saved item.</div>
+                        </div>
+                    </mat-list-option>
+                </mat-selection-list>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-raised-button color="primary" [matMenuTriggerFor]="saveMenu">
+                    <mat-icon>file_download</mat-icon><span>Save...</span>
+                </button>
+                <mat-menu #saveMenu="matMenu">
+                    <button mat-menu-item (click)="save()">
+                        <mat-icon>storage</mat-icon>
+                        <span>Into browser</span>
+                    </button>
+                    <button mat-menu-item (click)="saveDialog()">
+                        <mat-icon>text_snippet</mat-icon>
+                        <span>Into JSON</span>
+                    </button>
+                    <button mat-menu-item (click)="saveFile()">
+                        <mat-icon>insert_drive_file</mat-icon>
+                        <span>Into file</span>
+                    </button>
+                    <button mat-menu-item (click)="save()" disabled>
+                        <mat-icon>cloud</mat-icon>
+                        <span>Into PasteBin</span>
+                    </button>
+                </mat-menu>
+                
+                <button mat-raised-button color="primary" [matMenuTriggerFor]="loadMenu">
+                    <mat-icon>file_upload</mat-icon><span>Load...</span>
+                </button>
+                <mat-menu #loadMenu="matMenu">
+                    <button mat-menu-item (click)="loadDialog()">
+                        <mat-icon>text_snippet</mat-icon>
+                        <span>From JSON</span>
+                    </button>
+                    <button mat-menu-item (click)="browser.click()">
+                        <mat-icon>insert_drive_file</mat-icon>
+                        <span>From file</span>
+                        <input type="file" #browser (change)="loadFile($event)" hidden>
+                    </button>
+                    <button mat-menu-item (click)="save()" disabled>
+                        <mat-icon>cloud</mat-icon>
+                        <span>From PasteBin</span>
+                    </button>
+                </mat-menu>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+    
+    <div fxLayout="row" fxLayoutAlign="space-around">
+        <mat-card fxFlex="100">
+            <mat-card-title>Pre-payment</mat-card-title>
+            <mat-card-subtitle>In this section you can add the Pre-payments</mat-card-subtitle>
+            <mat-card-content>
+                <app-change-editor filter="pre-payment" #prePaymentEditor></app-change-editor>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-button (click)="prePaymentEditor.addPrePayment()"><mat-icon>add</mat-icon>Add</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+    
+    <div fxLayout="row" fxLayoutAlign="space-around">
+        <mat-card fxFlex="100">
+            <mat-card-title>Interest change</mat-card-title>
+            <mat-card-subtitle>In this section you can add interest rate changes</mat-card-subtitle>
+            <mat-card-content>
+                <app-change-editor filter="interest-change" #interestChangeEditor></app-change-editor>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-button (click)="interestChangeEditor.addInterestChange()"><mat-icon>add</mat-icon>Add</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+    
+    <div fxLayout="row" fxLayoutAlign="space-around">
+        <mat-card fxFlex="100">
+            <mat-card-title>Summary</mat-card-title>
+            <mat-card-subtitle></mat-card-subtitle>
+            <mat-card-content>
+                
+                <div style="color: yellow;" *ngIf="!annuitySrv.isConvergent()">
+                    <mat-icon>warning</mat-icon>
+                    <p>The loan capital is leading to infinity. The caluclation is stopped at 1000 month so the summary values are representing that state.</p>
+                </div>
+
+                <mat-table [dataSource]="annuitySrv.getOverallSummary()" class="summary-table" multiTemplateDataRows fxFill>
+                    
+                    <ng-container matColumnDef="which">
+                        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex" [ngSwitch]="i">
+                            <span class="title-column" *ngSwitchCase="0">Original</span>
+                            <span class="title-column" *ngSwitchCase="1">Difference</span>
+                            <span class="title-column" *ngSwitchCase="2">Updated</span>
+                            <span *ngSwitchDefault>{{ element.name }}</span>
+                        </mat-cell>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="term">
+                        <mat-header-cell *matHeaderCellDef> Loan term </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex">
+                            <ng-container *ngIf="i == 1 && element.duration > 0">&plus;</ng-container>
+                            <ng-container *ngIf="i == 1 && element.duration < 0">&minus;</ng-container>
+                            {{ abs(element.duration) + (abs(element.duration) > 1 ? ' months' : ' month') }}
+                        </mat-cell>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="pre-payment">
+                        <mat-header-cell *matHeaderCellDef> Pre-payment </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex">
+                            <ng-container *ngIf="i == 1 && element.prePayment > 0">&plus;</ng-container>
+                            <ng-container *ngIf="i == 1 && element.prePayment < 0">&minus;</ng-container>
+                            {{ abs(element.prePayment) | currency:loan.currency:'symbol':env.numberPrecision }}
+                        </mat-cell>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="fee">
+                        <mat-header-cell *matHeaderCellDef> Fee </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex">
+                            <ng-container *ngIf="i == 1 && element.fee > 0">&plus;</ng-container>
+                            <ng-container *ngIf="i == 1 && element.fee < 0">&minus;</ng-container>
+                            {{ abs(element.fee) | currency:loan.currency:'symbol':env.numberPrecision }}
+                        </mat-cell>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="interest">
+                        <mat-header-cell *matHeaderCellDef> Interest </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex">
+                            <ng-container *ngIf="i == 1 && element.interest > 0">&plus;</ng-container>
+                            <ng-container *ngIf="i == 1 && element.interest < 0">&minus;</ng-container>
+                            {{ abs(element.interest) | currency:loan.currency:'symbol':env.numberPrecision }}
+                        </mat-cell>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="total-payed">
+                        <mat-header-cell *matHeaderCellDef> Total payed </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex">
+                            <ng-container *ngIf="i == 1 && element.payed > 0">&plus;</ng-container>
+                            <ng-container *ngIf="i == 1 && element.payed < 0">&minus;</ng-container>
+                            {{ abs(element.payed) | currency:loan.currency:'symbol':env.numberPrecision }}
+                        </mat-cell>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="real-apr">
+                        <mat-header-cell *matHeaderCellDef> &#126; Real APR </mat-header-cell>
+                        <mat-cell *matCellDef="let element; let i = dataIndex">                            
+                            <ng-container *ngIf="i == 1 && element.realAPR > 0">&plus;</ng-container>
+                            <ng-container *ngIf="i == 1 && element.realAPR < 0">&minus;</ng-container>
+                            {{ abs(element.realAPR) | number:env.numberPrecision }}&percnt;
+                        </mat-cell>
+                    </ng-container>
+
+                    <mat-header-row *matHeaderRowDef="['which', 'term', 'pre-payment', 'fee', 'interest', 'total-payed', 'real-apr'];"></mat-header-row>
+                    <mat-row *matRowDef="let element; columns: ['which', 'term', 'pre-payment', 'fee', 'interest', 'total-payed', 'real-apr'];"></mat-row>
+                </mat-table>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    
+    <div fxLayout="row" fxLayoutAlign="space-around">
+        <mat-card fxFlex="100">
+            <mat-card-title>Chart</mat-card-title>
+            <mat-card-subtitle></mat-card-subtitle>
+            <mat-card-content>
+                <div class="chart-title">
+                    <span class="head">Capital dept</span><br>
+                    dept(month) &equals; Loan amount &minus; &sum;Pre-payment &minus; &sum;Payed capital
+                </div>
+                <app-chart type="capital" chartName=""></app-chart>
+
+                <div class="chart-title">
+                    <span class="head">Loan cost</span><br>
+                    cost(month) &equals; &sum;Payed interest &plus; &sum;Payed fee
+                </div>
+                <app-chart type="cost" chartName=""></app-chart>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    
+    <div fxLayout="row" fxLayoutAlign="space-around">
+        <mat-card fxFlex="100">
+            <mat-card-title>Table</mat-card-title>
+            <mat-card-subtitle></mat-card-subtitle>
+            <mat-card-content>
+                <app-table></app-table>
+            </mat-card-content>
+        </mat-card>        
+    </div>
+</div>

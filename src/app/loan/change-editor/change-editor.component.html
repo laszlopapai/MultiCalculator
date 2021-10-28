@@ -1,0 +1,68 @@
+
+<div fxLayout="row" *ngFor="let item of getChangeItems(); let i = index trackBy: trackByFn; last as isLast">
+
+    <!-- Common elements -->
+    <button mat-icon-button [matMenuTriggerFor]="removeMenu" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
+    <mat-menu #removeMenu="matMenu">
+        <button mat-menu-item disabled>
+            <span>Are you sure you want to delete?</span>
+        </button>
+        <button mat-menu-item (click)="removeChange(i)">
+            <mat-icon>check</mat-icon>
+            <span>Yes</span>
+        </button>
+        <button mat-menu-item>
+            <mat-icon>close</mat-icon>
+            <span>No</span>
+        </button>
+    </mat-menu>
+
+    <mat-form-field appearance="fill">
+        <mat-label>Date</mat-label>
+        <input matInput [matDatepicker]="picker" [(ngModel)]="changeItems[i].date">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker startView="multi-year"
+        (yearSelected)="chosenYearHandler($event, i)"
+        (monthSelected)="chosenMonthHandler($event, i, picker)"></mat-datepicker>
+    </mat-form-field>
+
+
+    <!-- Pre-paymnet only elements -->
+    <mat-form-field appearance="fill" *ngIf="filter == 'pre-payment'">
+        <mat-label>Amount of pre-payment</mat-label>
+        <input matInput type="tel" [(ngModel)]="changeItems[i].prePayedAmount" placeholder="Amount" name="word{{i}}" mask="separator.2" thousandSeparator="," [prefix]="dataSrv.loanProperties.currency | currencySymbol">
+        <mat-hint *ngIf="isLast">Amount without any additional fees or charges.</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="fill" *ngIf="filter == 'pre-payment'">
+        <mat-label>Proportional fee</mat-label>
+        <input matInput type="tel" [(ngModel)]="changeItems[i].prePaymentFeeRate" placeholder="Percentage" name="word{{i}}" mask="separator.2" suffix="%">
+        <mat-hint *ngIf="isLast">The percentage of the charge from the pre-payment.</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="fill" *ngIf="filter == 'pre-payment'">
+        <mat-label>Fixed fee</mat-label>
+        <input matInput type="tel" [(ngModel)]="changeItems[i].changeFeeCost" placeholder="Amount" name="word{{i}}" mask="separator.2" thousandSeparator="," [prefix]="dataSrv.loanProperties.currency | currencySymbol">
+        <mat-hint *ngIf="isLast">The fix cost of the pre-payment. e.g.: contract change fee</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="fill" *ngIf="filter == 'pre-payment'">
+        <mat-label>New instalment</mat-label>
+        <input matInput type="tel" [disabled]="!changeItems[i].instalmentChanged" [(ngModel)]="changeItems[i].newInstalment" placeholder="Amount" name="word{{i}}" mask="separator.2" thousandSeparator="," [prefix]="dataSrv.loanProperties.currency | currencySymbol">
+        <mat-checkbox matPrefix color="accent" (change)="changeItems[i].newInstalment=0" [(ngModel)]="changeItems[i].instalmentChanged"></mat-checkbox>
+        <button mat-icon-button matSuffix [disabled]="!changeItems[i].instalmentChanged" (click)="calulateInstalmentAfterChange(i)"><mat-icon>calculate</mat-icon></button>
+        <mat-hint *ngIf="isLast">
+            Tick if the instalments change.<br> e.g.: In case of fixed length contract.<br>
+            Click the calculator button to calculate the new instalment with fixed length contract.
+        </mat-hint>
+    </mat-form-field>
+
+    <!-- Interest change only elements -->
+    <mat-form-field appearance="fill" *ngIf="filter == 'interest-change'">
+        <mat-label>New rate</mat-label>
+        <input matInput type="tel" [(ngModel)]="changeItems[i].newRate" placeholder="Rate" name="word{{i}}" mask="separator.2" suffix="%">
+    </mat-form-field>
+    <mat-form-field appearance="fill" *ngIf="filter == 'interest-change'">
+        <mat-label>New instalment</mat-label>
+        <input matInput type="tel" [disabled]="!changeItems[i].instalmentChanged" [(ngModel)]="changeItems[i].newInstalment" placeholder="Amount" name="word{{i}}" mask="separator.2" thousandSeparator="," [prefix]="dataSrv.loanProperties.currency | currencySymbol">
+        <mat-checkbox matPrefix color="accent" (change)="changeItems[i].newInstalment=undefined" [(ngModel)]="changeItems[i].instalmentChanged"></mat-checkbox>
+        <button mat-icon-button matSuffix [disabled]="!changeItems[i].instalmentChanged" (click)="calulateInstalmentAfterChange(i)"><mat-icon>calculate</mat-icon></button>
+    </mat-form-field>
+</div>
